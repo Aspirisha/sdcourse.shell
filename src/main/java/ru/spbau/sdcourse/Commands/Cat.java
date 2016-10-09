@@ -1,10 +1,13 @@
 package ru.spbau.sdcourse.Commands;
 
+import ru.spbau.sdcourse.util.PathResolver;
+
 import java.io.IOException;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +30,8 @@ public class Cat extends Command {
         encoding = environment.containsKey("LANG") && Charset.availableCharsets().containsKey(environment.get("LANG")) ? Charset.availableCharsets().get(environment.get("LANG")) : StandardCharsets.UTF_8;
         arguments.stream().flatMap((String file) -> {
             try {
-                return Files.readAllLines(Paths.get(file), encoding).stream();
+                Path fileAbsolutePath = PathResolver.resolvePath(file);
+                return Files.readAllLines(fileAbsolutePath, encoding).stream();
             } catch (IOException e) {
                 return Stream.of("Can not open file " + file);
             }

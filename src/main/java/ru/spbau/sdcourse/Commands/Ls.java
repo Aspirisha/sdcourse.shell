@@ -1,6 +1,9 @@
 package ru.spbau.sdcourse.Commands;
 
+import ru.spbau.sdcourse.util.PathResolver;
+
 import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,7 +26,8 @@ public class Ls extends Command {
         if(arguments == null || arguments.size() == 0) {
             folders = Collections.singletonList(new File(System.getProperty("user.dir")));
         } else {
-            folders = arguments.stream().map(File::new).collect(Collectors.toList());
+            folders = arguments.stream().map(PathResolver::resolvePath)
+                    .map(Path::toFile).collect(Collectors.toList());
         }
         String res = folders.stream()
                             .flatMap(f -> f.listFiles() == null ? Stream.of("ls: Can not open directory " + f.getName())
