@@ -81,6 +81,8 @@ public class Shell {
                     throw e1;
                 } catch (Throwable e1) {
                     System.out.println(e1.getMessage());
+                    results.get(0).cancel(true);
+                    return;
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
