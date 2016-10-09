@@ -3,6 +3,7 @@ package ru.spbau.sdcourse;
 import org.junit.*;
 import ru.spbau.sdcourse.Commands.*;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +22,8 @@ public class ShellTest {
     private String testfile2 = "test2.txt";
     private String execFile = "exec";
 
+    private String originalPath;
+
     ExecutorService executor = Executors.newCachedThreadPool();
 
     class TestReader extends Command {
@@ -36,6 +39,20 @@ public class ShellTest {
             inputLines.stream().forEach(this::putLine);
         }
     }
+
+    /**
+     * This two friends are needed since cdTest changes current directory
+     */
+    @Before
+    public void rememberCurrentDir() {
+        originalPath = System.getProperty("user.dir");
+    }
+
+    @After
+    public void restoreCurrentDir() {
+        System.setProperty("user.dir", originalPath);
+    }
+
 
     class TestChecker extends Command {
         List<String> expectedLines;
@@ -85,6 +102,29 @@ public class ShellTest {
         Ls ls = new Ls(null, Collections.singletonList(resDir), null);
         TestChecker checker = new TestChecker(ls, Collections.singletonList(String.join(" ", testfile1, testfile2, execFile)));
         ls.call();
+        checker.call();
+    }
+
+    @Test(timeout=1000)
+    public void cdTest() throws Exception {
+        Cd cd = new Cd(null, Collections.singletonList(resDir), null);
+        Pwd pwd = new Pwd(null, Collections.emptyList(), null);
+
+        // note the order: after cd is called, current directory is changed!!!
+        TestChecker checker = new TestChecker(pwd, Collections.singletonList(
+                Paths.get(originalPath).resolve(resDir).toFile().getCanonicalPath()));
+        cd.call();
+
+        pwd.call();
+        checker.call();
+
+
+        cd = new Cd(null, Collections.singletonList("dir1"), null);
+        pwd = new Pwd(null, Collections.emptyList(), null);
+        checker = new TestChecker(pwd, Collections.singletonList(Paths.get(originalPath)
+                .resolve(resDir).resolve("dir1").toFile().getCanonicalPath()));
+        cd.call();
+        pwd.call();
         checker.call();
     }
 
